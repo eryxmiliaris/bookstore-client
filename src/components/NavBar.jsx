@@ -6,54 +6,42 @@ function NavBar() {
 
   return (
     <nav className="bg-violet-500 px-4 py-4">
-      <div className="container mx-auto flex items-center justify-between">
+      <div className="container mx-auto flex items-center justify-between px-2 lg:max-w-5xl ">
         <Link to="/" className="text-2xl font-semibold text-white">
           Bookstore
         </Link>
-        <ul className="flex space-x-4">
+        <div className="space-x-4">
           {!user ? (
             <>
-              <li>
-                <Link to="/login" className="text-white hover:text-gray-300">
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="text-white hover:text-gray-300">
-                  Register
-                </Link>
-              </li>
+              <Link to="/login" className="text-white hover:text-gray-300">
+                Login
+              </Link>
+              <Link to="/register" className="text-white hover:text-gray-300">
+                Register
+              </Link>
             </>
           ) : (
             <>
-              <li>
-                <Link to="/profile" className="text-white hover:text-gray-300">
-                  Profile
-                </Link>
-              </li>
-              <li>
-                <Link to="/user" className="text-white hover:text-gray-300">
-                  User
-                </Link>
-              </li>
+              <Link to="/profile" className="text-white hover:text-gray-300">
+                Profile
+              </Link>
+              <Link to="/user" className="text-white hover:text-gray-300">
+                User
+              </Link>
               {user?.roles?.includes("ROLE_ADMIN") && (
-                <li>
-                  <Link to="/admin" className="text-white hover:text-gray-300">
-                    Admin
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link
-                  className="text-white hover:text-gray-300"
-                  onClick={() => logout()}
-                >
-                  Logout
+                <Link to="/admin" className="text-white hover:text-gray-300">
+                  Admin
                 </Link>
-              </li>
+              )}
+              <button
+                className="text-white hover:text-gray-300"
+                onClick={() => logout()}
+              >
+                Logout
+              </button>
             </>
           )}
-        </ul>
+        </div>
       </div>
     </nav>
   );

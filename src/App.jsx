@@ -11,8 +11,8 @@ import Register from "./components/Register";
 import Profile from "./components/Profile";
 import User from "./components/User";
 import Admin from "./components/Admin";
-import BookList from "./components/BookList";
-import BookPage from "./components/BookPage";
+import BookPage from "./pages/BookPage";
+import CataloguePage from "./pages/CataloguePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +37,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/user" element={<User />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/books" element={<BookList />} />
+              <Route path="/books" element={<CataloguePage />} />
               <Route path="/books/:id" element={<BookPage />} />
             </Route>
           </Routes>
