@@ -6,9 +6,9 @@ import { AiOutlineWarning } from "react-icons/ai";
 import { useAuth } from "../contexts/AuthContext";
 
 function Login() {
-  const [username, setUsername] = useState("user");
+  const [login, setLogin] = useState("user");
   const [password, setPassword] = useState("user");
-  const { user, message, isLoading, login, clearMessages } = useAuth();
+  const { user, message, isLoading, login: signin, clearMessages } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +20,7 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    login(username, password);
+    signin(login, password);
   };
 
   return (
@@ -38,18 +38,15 @@ function Login() {
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              htmlFor="username"
-              className="block font-medium text-gray-600"
-            >
-              Username
+            <label htmlFor="login" className="block font-medium text-gray-600">
+              Username or email
             </label>
             <input
               type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="login"
+              name="login"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
               className="mt-1 w-full rounded border p-2"
               required
             />

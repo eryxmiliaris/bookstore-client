@@ -43,11 +43,11 @@ function AuthProvider({ children }) {
     fetchData();
   }, []);
 
-  const login = async function (username, password) {
+  const login = async function (login, password) {
     setIsLoading(true);
     try {
       const response = await customAxios.post("/auth/signin", {
-        username,
+        login: login,
         password,
       });
       setUser(response.data);
