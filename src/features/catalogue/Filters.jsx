@@ -1,4 +1,4 @@
-import { CircularProgress, Slider } from "@mui/material";
+import { Slider } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import queryString from "query-string";
@@ -6,11 +6,17 @@ import { useSearchParams } from "react-router-dom";
 
 import axios from "../../util/axios";
 import FilterItem from "./FilterItem";
+import Button from "../../components/Button";
+import Spinner from "../../components/Spinner";
 
-const types = ["Paper book", "Ebook", "Audio book"];
+const types = ["Paper book", "Ebook", "Audiobook"];
 
 function Filters() {
-  const { data: categories, isLoading: categoriesIsLoading } = useQuery({
+  const {
+    data: categories,
+    isLoading: categoriesIsLoading,
+    error,
+  } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const response = await axios.get("/categories");
@@ -36,11 +42,11 @@ function Filters() {
   );
 
   if (categoriesIsLoading) {
-    return (
-      <div className="container mx-auto py-8 text-center">
-        <CircularProgress style={{ color: "rgb(139 92 246)" }} />
-      </div>
-    );
+    return <Spinner />;
+  }
+
+  if (error) {
+    return <div>Error occured: {error.message}</div>;
   }
 
   const handlePriceChange = function (event, newValue) {
@@ -68,32 +74,15 @@ function Filters() {
       />
       <div className="rounded-lg bg-white p-4 shadow-lg">
         <p className="mb-2 text-xl font-semibold">Price Range</p>
+
         <Slider
-          sx={{
-            "& .MuiSlider-thumb": {
-              color: "#8B5CF6",
-            },
-            "& .MuiSlider-track": {
-              color: "#8B5CF6",
-            },
-            "& .MuiSlider-rail": {
-              color: "##8B5CF6",
-            },
-            "& .MuiSlider-active": {
-              color: "#8B5CF6",
-            },
-          }}
+          color="primary"
           value={priceValue}
           onChange={handlePriceChange}
           valueLabelDisplay="auto"
           max={120}
         />
-        <button
-          onClick={handleApplyPriceRange}
-          className="mt-2 rounded-lg bg-violet-500 px-4 py-2 text-white transition duration-300 hover:bg-violet-600"
-        >
-          Apply price range
-        </button>
+        <Button onClick={handleApplyPriceRange}>Apply price range</Button>
       </div>
     </div>
   );

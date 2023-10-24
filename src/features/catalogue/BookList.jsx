@@ -1,4 +1,4 @@
-import { CircularProgress, Pagination } from "@mui/material";
+import { Pagination } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import queryString from "query-string";
 import { useSearchParams } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import axios from "../../util/axios";
 
 import BookListItem from "./BookListItem";
+import Spinner from "../../components/Spinner";
 
 function BookList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,11 +61,7 @@ function BookList() {
   });
 
   if (booksIsLoading) {
-    return (
-      <div className="container mx-auto py-8 text-center">
-        <CircularProgress style={{ color: "rgb(139 92 246)" }} />
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (error) {

@@ -2,6 +2,9 @@ import queryString from "query-string";
 import Select from "react-select";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+
 const sortOptions = [
   {
     label: "Title ascending",
@@ -105,50 +108,18 @@ function Sorting() {
               className="absolute inset-y-0 right-10 flex cursor-pointer items-center pr-3"
               onClick={() => handleSearchClear()}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <ClearIcon />
             </span>
           )}
           <span
             className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
             onClick={handleSearchClick}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M17.293 18.293a1 1 0 001.414-1.414l-4-4a1 1 0 00-1.414 1.414L15 19.414a1 1 0 001.414 0z"
-              />
-            </svg>
+            <SearchIcon />
           </span>
         </div>
       </div>
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 flex items-center justify-end space-x-2">
         <p className="text-lg font-semibold">Sort by:</p>
         <Select
           options={sortOptions}

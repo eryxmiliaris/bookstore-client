@@ -70,7 +70,7 @@ function FilterItem({ data, title, paramName }) {
                 value={el}
                 checked={dataCheckedState[index]}
                 onChange={() => handleOnChange(el, index)}
-                className="form-checkbox h-5 w-5 text-blue-500"
+                className="form-checkbox min-h-5 min-w-5 text-blue-500"
               />
               <span>{el}</span>
             </label>
