@@ -15,6 +15,7 @@ const AuthContext = createContext();
 
 function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [userIsLoading, setUserIsLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
@@ -22,28 +23,47 @@ function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(function () {
-    const fetchData = async function () {
-      try {
-        const response = await axios.get(
-          "http://localhost:8080/api/auth/user",
-          {
-            withCredentials: true,
-          },
-        );
-        setMessage("");
-        setUser(response.data);
-      } catch (error) {
-        setUser(null);
-        // setMessage(error.response.data.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchUserData();
   }, []);
 
-  const login = async function (login, password) {
+  const fetchUserData = async function () {
+    setUserIsLoading(true);
+    try {
+      const response = await axios.get("http://localhost:8080/api/user/info", {
+        withCredentials: true,
+      });
+      setMessage("");
+      setUser(response.data);
+    } catch (error) {
+      setUser(null);
+      // setMessage(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+      setUserIsLoading(false);
+    }
+  };
+
+  const updateUserData = async function (username, email, birthDate) {
+    setIsLoading(true);
+    setSuccess(false);
+    try {
+      await customAxios.put(`/user/info`, {
+        username,
+        email,
+        birthDate,
+      });
+      toast.success("User info has been successfully updated");
+      setSuccess(true);
+      fetchUserData();
+    } catch (e) {
+      toast.error("Error appeared: " + e.response.data.message);
+      setSuccess(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signin = async function (login, password) {
     setIsLoading(true);
     try {
       const response = await customAxios.post("/auth/signin", {
@@ -53,7 +73,7 @@ function AuthProvider({ children }) {
       setUser(response.data);
       setMessage("");
       navigate("/profile");
-      toast.success("You were logged in!");
+      toast.success("You were singed in!");
     } catch (error) {
       setUser(null);
       setMessage(error.response.data.message);
@@ -62,7 +82,7 @@ function AuthProvider({ children }) {
     }
   };
 
-  const register = async function (username, email, password) {
+  const signup = async function (username, email, password, birthDate) {
     setIsLoading(true);
     setSuccess(false);
     try {
@@ -70,6 +90,7 @@ function AuthProvider({ children }) {
         username,
         email,
         password,
+        birthDate,
       });
       setMessage(response.data.message);
       setSuccess(true);
@@ -88,11 +109,44 @@ function AuthProvider({ children }) {
       setIsLoading(false);
     }
   };
-  const logout = async function () {
+
+  const signout = async function () {
     await customAxios.post("/auth/signout");
     setUser(null);
-    toast.success("Logged out successfully!");
+    toast.success("Signed out successfully!");
     navigate("/");
+  };
+
+  const forgotPassword = async function (email) {
+    setIsLoading(true);
+    try {
+      await customAxios.post(`/auth/forgot?email=${email}`);
+      setMessage("");
+      toast.success("Reset link was sent to given email!");
+    } catch (error) {
+      setMessage(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async function (token, password) {
+    setIsLoading(true);
+    try {
+      await customAxios.post(`/auth/reset`, {
+        token: token,
+        password: password,
+      });
+      // setMessage(response.data.message);
+      setMessage("");
+      toast.success("Password has been successfully reset!");
+      navigate("/signin");
+    } catch (error) {
+      setMessage(error.response.data.message);
+      setErrorList(error.response.data.errors);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const clearMessages = useCallback(function () {
@@ -104,14 +158,18 @@ function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        userIsLoading,
         isLoading,
         message,
         success,
         errorList,
-        login,
-        register,
-        logout,
+        signin,
+        signup,
+        forgotPassword,
+        resetPassword,
+        signout,
         clearMessages,
+        updateUserData,
       }}
     >
       {children}

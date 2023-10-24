@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { IconContext } from "react-icons";
 import { AiOutlineWarning } from "react-icons/ai";
 
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../../components/Button";
 
-function Login() {
+function SignIn() {
   const [login, setLogin] = useState("user");
   const [password, setPassword] = useState("user");
-  const { user, message, isLoading, login: signin, clearMessages } = useAuth();
+  const { user, message, isLoading, signin, clearMessages } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +28,7 @@ function Login() {
     <div className="mt-10 flex items-center justify-center">
       <div className="w-full max-w-md rounded bg-white p-4 shadow-md md:p-8">
         <p className="mb-4 text-center text-2xl font-semibold text-violet-700">
-          Login
+          Sign in
         </p>
         {message && (
           <div className="mb-4 flex items-center rounded border border-red-400 bg-red-100 px-4 py-2 text-red-700">
@@ -68,17 +69,17 @@ function Login() {
               required
             />
           </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded bg-violet-500 px-4 py-2 text-white hover:bg-violet-700 focus:outline-none"
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
+          <Button disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
+        <p className="mt-2 flex justify-between italic opacity-75">
+          <Link to={"/forgot"}>Forgot passsword?</Link>
+          <Link to={"/signup"}>Don't have an account?</Link>
+        </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default SignIn;

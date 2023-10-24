@@ -1,19 +1,22 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { forwardRef, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Controller, useForm } from "react-hook-form";
 import { AiOutlineWarning, AiOutlineCheck } from "react-icons/ai";
 import { IconContext } from "react-icons";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../../components/Button";
 
-function Register() {
+function SignUp() {
   const {
     user,
     isLoading,
     message,
     success,
     errorList,
-    register: signup,
+    signup,
     clearMessages,
   } = useAuth();
 
@@ -27,20 +30,22 @@ function Register() {
   }, [user, navigate, clearMessages]);
 
   const {
+    control,
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm();
 
   const onSubmit = (data) => {
-    signup(data.username, data.email, data.password);
+    signup(data.username, data.email, data.password, data.birth_date);
   };
 
   return (
     <div className="mt-10 flex items-center justify-center bg-violet-100">
       <div className="w-full max-w-md rounded bg-white p-4 shadow-md md:p-8">
         <p className="mb-4 text-center text-2xl font-semibold text-violet-700">
-          Registration
+          Sign up
         </p>
         {message && (
           <div
@@ -152,19 +157,73 @@ function Register() {
               <p className="mt-1 text-red-600">{errors.password.message}</p>
             )}
             {errorList && errorList.password && (
-              <p className="mt-1 text-red-600">{errorList.password}</p>
+              <>
+                {errorList.password.split(",").map((e) => (
+                  <p key={e} className="mt-1 text-red-600">
+                    {e}
+                  </p>
+                ))}
+              </>
             )}
           </div>
-          <button
-            type="submit"
-            className="w-full rounded bg-violet-500 px-4 py-2 text-white hover:bg-violet-700 focus:outline-none"
-          >
-            {isLoading ? "Signing up..." : "Submit"}
-          </button>
+
+          <div className="mb-4">
+            <label
+              htmlFor="confirm_password"
+              className="block font-medium text-gray-600"
+            >
+              Confirm password
+            </label>
+            <input
+              type="password"
+              id="confirm_password"
+              name="confirm_password"
+              {...register("confirm_password", {
+                required: "This field is required",
+                validate: (value) => {
+                  const { password } = getValues();
+                  return password === value || "Passwords should match!";
+                },
+              })}
+              className="mt-1 w-full rounded border p-2"
+            />
+            {errors.confirm_password && (
+              <p className="mt-1 text-red-600">
+                {errors.confirm_password.message}
+              </p>
+            )}
+          </div>
+          <div className="mb-4 flex flex-col">
+            <label className="block font-medium text-gray-600">
+              Birth date
+            </label>
+            <Controller
+              name="birth_date"
+              control={control}
+              rules={{ required: "Birth date is required" }}
+              render={({ field }) => (
+                <DatePicker
+                  className="mt-1 w-full rounded border p-2"
+                  selected={field.value}
+                  onChange={(date) => field.onChange(date)}
+                  dateFormat="yyyy/MM/dd"
+                  maxDate={new Date()}
+                />
+              )}
+            />
+            {errors.birth_date && (
+              <p className="mt-1 text-red-600">{errors.birth_date.message}</p>
+            )}
+          </div>
+          <Button>{isLoading ? "Signing up..." : "Sign up"}</Button>
         </form>
+
+        <p className="mt-2 italic opacity-75">
+          <Link to={"/signin"}>Already have an account?</Link>
+        </p>
       </div>
     </div>
   );
 }
 
-export default Register;
+export default SignUp;
