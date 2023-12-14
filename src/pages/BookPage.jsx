@@ -1,95 +1,118 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import axios from "../util/axios";
-import { useState } from "react";
-import Versions from "../features/bookpage/Versions";
-import toast from "react-hot-toast";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../features/auth/AuthContext";
+import { useLocalCart } from "../features/cart/LocalCartContext";
 import { useWishlist } from "../features/wishlist/useWishlist";
+import { useBook } from "../features/bookpage/useBook";
+import { useAddToCart } from "../features/cart/useAddToCart";
+import {
+  API_BASE_URL,
+  AUDIOBOOK,
+  EBOOK,
+  PAPER_BOOK,
+} from "../constants/appConstants";
+
+import Versions from "../features/bookpage/Versions";
 import Spinner from "../components/Spinner";
+import Button from "../components/Button";
+import ModalWindow from "../components/ModalWindow";
+import ErrorPage from "../components/ErrorPage";
+import ReviewList from "../features/bookpage/ReviewList";
 
 function BookPage() {
   const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [searchParams] = useSearchParams();
   const [paperBookId, setPaperBookId] = useState(
     Number(searchParams.get("paperBookId")) || 0,
   );
-  const [wishlistClickProcessing, setWishlistClickProcessing] = useState(false);
-
-  const navigate = useNavigate();
-
-  const {
-    data: book,
-    isLoading,
-    error,
-  } = useQuery([`book${id}`], async () => {
-    const response = await axios.get(`/books/${id}`);
-    return response.data;
-  });
+  const { book, isLoading: isLoadingBook, error: bookError } = useBook(id);
+  const { wishlist, isLoading: isLoadingWishlist } = useWishlist();
 
   const { user } = useAuth();
-  const {
-    wishlist,
-    isLoading: isLoadingWishlist,
-    error: wishlistError,
-  } = useWishlist();
-  const queryClient = useQueryClient();
+  const { addItemToLocalCart } = useLocalCart();
+  const { isAdding: isAddingToCart, addToCart } = useAddToCart();
 
-  if (isLoading || isLoadingWishlist) {
+  const [isOrdered, setIsOrdered] = useState(false);
+  useEffect(() => {
+    const isBookOrdered = async () => {
+      try {
+        const response = await axios.get(`/orders/book/${id}`);
+        if (response.data) {
+          setIsOrdered(true);
+        }
+      } catch (e) {
+        console.log(e.data);
+      }
+    };
+    isBookOrdered();
+  }, [setIsOrdered, id]);
+
+  const [addToLibraryOpen, setAddToLibraryOpen] = useState(false);
+  const { mutate: addToLibrary, isLoading: isAddingToLibrary } = useMutation({
+    mutationFn: () => {
+      return axios.post(
+        `/library/subscriptionItems?bookId=${id}&bookType=${bookType}`,
+      );
+    },
+    onSuccess: () => {
+      toast.success("Book has been successfully added to your library");
+      setAddToLibraryOpen(false);
+    },
+    onError: (err) => toast.error(err.response.data.message),
+  });
+
+  const [wishlistClickProcessing, setWishlistClickProcessing] = useState(false);
+
+  if (isLoadingBook || isLoadingWishlist) {
     return <Spinner />;
   }
 
-  if (error) {
-    return <div>Error occured: {error.message}</div>;
+  if (bookError) {
+    return <ErrorPage error={bookError} />;
   }
 
   const {
     title,
     author,
     rating,
+    numOfReviews,
+    reviews,
     categories,
     description,
     publicationDate,
     paperBooks,
     ebook,
-    audioBook,
+    audiobook,
   } = book;
-  const bookType =
-    searchParams.get("bookType") ||
-    (paperBooks?.length > 0 ? "Paper book" : ebook ? "Ebook" : "Audiobook");
-  let fullBookType;
-  switch (bookType) {
-    case "Paper book":
-      fullBookType = "Paper book";
-      break;
-    case "Ebook":
-      fullBookType = "Ebook";
-      break;
-    case "Audiobook":
-      fullBookType = "Audiobook";
-      break;
+
+  if (!paperBooks.length && !ebook && !audiobook) {
+    window.location.replace("/books");
   }
 
-  // const inWishlist = false;
+  const bookType =
+    searchParams.get("bookType") ||
+    (paperBooks?.length > 0 ? PAPER_BOOK : ebook ? EBOOK : AUDIOBOOK);
+
   const inWishlist = user
     ? wishlist.filter(
         (w) =>
           w.bookId === Number(id) &&
-          w.bookType === fullBookType &&
+          w.bookType === bookType &&
           (w.paperBookId === null ||
-            w.paperBookId === paperBooks[paperBookId].id),
+            w.paperBookId === paperBooks[0]?.id ||
+            w.paperBookId === paperBookId),
       ).length > 0
     : false;
 
-  const coverImageURL =
-    bookType === "Paper book"
-      ? paperBooks[paperBookId].coverImageUrl
-      : bookType === "Ebook"
-      ? ebook.coverImageUrl
-      : audioBook.coverImageUrl;
-
-  const handleWishlistClick = async function () {
+  const handleWishlistClick = async () => {
     if (!user) {
       navigate("/signin");
       return;
@@ -100,61 +123,106 @@ function BookPage() {
         .filter(
           (w) =>
             w.bookId === Number(id) &&
-            w.bookType === fullBookType &&
+            w.bookType === bookType &&
             (w.paperBookId === null ||
-              w.paperBookId === paperBooks[paperBookId].id),
+              w.paperBookId === paperBooks[0]?.id ||
+              w.paperBookId === paperBookId),
         )
         .at(0).id;
       try {
-        await axios.delete(`/user/wishlist/${wishlistId}`);
+        await axios.delete(`/wishlist/${wishlistId}`);
         queryClient.invalidateQueries("wishlist");
         toast.success("Book has been successfully removed from your wishlist!");
       } catch (error) {
-        toast.error("Error occured while removing book from your wishlist.");
+        toast.error(error.response.data.message);
         console.error(error);
       } finally {
         setWishlistClickProcessing(false);
       }
     } else {
       try {
-        await axios.post("/user/wishlist", {
+        await axios.post("/wishlist", {
           bookId: id,
-          bookType: fullBookType,
-          paperBookId:
-            bookType === "Paper book" ? paperBooks[paperBookId].id : null,
+          bookType: bookType,
+          paperBookId: paperBookId || paperBooks[0]?.id || null,
         });
         toast.success("Book has been successfully added to your wishlist!");
         queryClient.invalidateQueries("wishlist");
       } catch (error) {
-        toast.error("Error occured while adding book to your wishlist.");
+        toast.error(error.response.data.message);
         console.error(error);
+      } finally {
+        setWishlistClickProcessing(false);
       }
     }
   };
 
-  const renderSwitch = function (bookType) {
+  const handleAddToCart = () => {
+    if (!user) {
+      const price =
+        bookType === PAPER_BOOK
+          ? paperBooks?.filter((pb) => pb.id === paperBookId)[0]?.price ||
+            paperBooks[0].price
+          : bookType === EBOOK
+          ? ebook.price
+          : audiobook.price;
+      if (
+        addItemToLocalCart({
+          bookId: Number(id),
+          bookType,
+          paperBookId: paperBookId || paperBooks[0]?.id || null,
+          quantity: 1,
+          hasDiscount: false,
+          priceWithDiscount: 0,
+          price: price,
+          totalPrice: price,
+        })
+      ) {
+        toast.success("Book added to your cart");
+      } else {
+        toast.error("You already have that book in your cart");
+      }
+    } else {
+      addToCart({
+        bookId: id,
+        bookType,
+        paperBookId: paperBookId || paperBooks[0]?.id || null,
+      });
+    }
+  };
+
+  const renderSwitch = (bookType) => {
+    let pb;
     switch (bookType) {
-      case "Paper book":
+      case PAPER_BOOK:
+        pb =
+          paperBooks.filter((pb) => pb.id === paperBookId)[0] || paperBooks[0];
         return (
           <>
-            <p>Publisher: {paperBooks.at(paperBookId).publisher}</p>
-            <p>Number of pages: {paperBooks.at(paperBookId).numOfPages}</p>
-            <p>ISBN: {paperBooks.at(paperBookId).isbn}</p>
+            <p>Publisher: {pb.publisher}</p>
+            <p>Number of pages: {pb.numOfPages}</p>
+            <p>ISBN: {pb.isbn}</p>
           </>
         );
-      case "Ebook":
+      case EBOOK:
         return (
           <>
             <p>Publisher: {ebook.publisher}</p>
             <p>Number of pages: {ebook.numOfPages}</p>
           </>
         );
-      case "Audiobook":
+      case AUDIOBOOK:
         return (
           <>
-            <p>Publisher: {audioBook.publisher}</p>
-            <p>Narrator: {audioBook.narrator}</p>
-            <p>Duration: {audioBook.durationSeconds}</p>
+            <p>Publisher: {audiobook.publisher}</p>
+            <p>Narrator: {audiobook.narrator}</p>
+            <p>
+              Duration: {Math.floor(audiobook.durationSeconds / 3600)}:
+              {String(
+                Math.floor((audiobook.durationSeconds % 3600) / 60),
+              ).padStart(2, "0")}
+              :{String(audiobook.durationSeconds % 60).padStart(2, "0")}
+            </p>
           </>
         );
     }
@@ -162,42 +230,57 @@ function BookPage() {
 
   return (
     <div className="container mx-auto py-8 ">
-      <div className="flex flex-col items-start gap-4 space-y-4 sm:flex-row sm:space-x-5">
-        <div className="flex w-full flex-col items-center sm:w-1/3">
+      <div className="flex flex-col items-center gap-4 space-y-4 sm:flex-row sm:items-start sm:space-x-5">
+        <div className="flex flex-col items-center gap-2 sm:w-1/4">
           <img
-            src={"https://picsum.photos/400/600"}
-            // src={coverImageURL}
+            src={`${API_BASE_URL}/books/${id}/coverImage?bookType=${bookType}&paperBookId=${
+              paperBookId || paperBooks[0]?.id || 0
+            }`}
             alt={title}
-            className="max-h-[600px] max-w-[250px] sm:max-h-[350px] sm:max-w-[230px]"
+            className="max-h-[600px] max-w-[250px] rounded-md sm:max-h-[350px] sm:max-w-full"
           />
-          <div className="mt-4 flex flex-row">
-            <button
-              className="mr-2 bg-violet-500 px-4 py-2 text-white"
-              onClick={handleWishlistClick}
-              disabled={wishlistClickProcessing}
-            >
-              {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-            </button>
-            <button className="bg-green-600 px-4 py-2 text-white">Buy</button>
-          </div>
+
+          <Button
+            onClick={handleWishlistClick}
+            disabled={wishlistClickProcessing}
+          >
+            {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+          </Button>
+          <Button
+            type="green"
+            disabled={isAddingToCart}
+            onClick={handleAddToCart}
+          >
+            Buy
+          </Button>
+          {bookType !== PAPER_BOOK && user?.hasActiveSubscription && (
+            <>
+              <Button onClick={() => setAddToLibraryOpen(true)}>
+                Add to library
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="w-full sm:w-1/3">
           <p className="mb-4 text-3xl font-semibold">{title}</p>
           <p>Author: {author}</p>
-          <p>Rating: {rating}</p>
+          <p>
+            Rating: {rating} ({numOfReviews})
+          </p>
           <p>Categories: {categories.join(", ")}</p>
           <p>Publication date: {publicationDate}</p>
           {renderSwitch(bookType)}
         </div>
 
         <Versions
+          bookId={id}
           bookType={bookType}
           paperBooks={paperBooks}
           paperBookId={paperBookId}
           setPaperBookId={setPaperBookId}
           ebook={ebook}
-          audioBook={audioBook}
+          audiobook={audiobook}
         />
       </div>
 
@@ -206,9 +289,26 @@ function BookPage() {
         <p>{description}</p>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold">Opinions</h2>
-      </div>
+      <ReviewList reviews={reviews} isOrdered={isOrdered} />
+
+      <ModalWindow
+        open={addToLibraryOpen}
+        onClose={() => setAddToLibraryOpen(false)}
+      >
+        <p className="text-2xl font-semibold">Add book to the library?</p>
+        <p className="text-lg">
+          This book can be added to your library, because you have an active
+          subscription. You will lose access to the book as soon as the
+          subscription ends, but you can always buy a book or prolong your
+          subscription.
+        </p>
+        <Button disabled={isAddingToLibrary} onClick={addToLibrary}>
+          Confirm
+        </Button>
+        <Button type="red" onClick={() => setAddToLibraryOpen(false)}>
+          Cancel
+        </Button>
+      </ModalWindow>
     </div>
   );
 }
