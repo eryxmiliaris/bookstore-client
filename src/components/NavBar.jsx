@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../features/auth/AuthContext";
 import { useState } from "react";
 import {
   Divider,
@@ -32,7 +32,7 @@ import {
 } from "@mui/icons-material";
 
 function NavBar() {
-  const { user, signout } = useAuth();
+  const { user, isAdmin, signout } = useAuth();
 
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,9 +42,9 @@ function NavBar() {
     document.getElementById("navbarSearch").blur();
   };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [drawerIsOpen, setDrawerIsOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  const menuIsOpen = Boolean(anchorEl);
 
   const handleProfileIconClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -59,180 +59,54 @@ function NavBar() {
   return (
     <nav className="bg-violet-500 px-4 py-4">
       <div className="container mx-auto flex flex-col items-center justify-between space-y-4 md:px-8 lg:max-w-5xl lg:px-4">
-        <Drawer anchor="right" open={isOpen} onClose={() => setIsOpen(false)}>
+        <Drawer
+          anchor="right"
+          open={drawerIsOpen}
+          onClose={() => setDrawerIsOpen(false)}
+        >
           <List>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={Link}
-                to="/books?bookType=Paper book"
-                onClick={() => setIsOpen(false)}
-              >
-                <ListItemIcon>
-                  <Book />
-                </ListItemIcon>
-                <ListItemText className="pr-4" primary="Paper books" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={Link}
-                to="/books?bookType=Ebook"
-                onClick={() => setIsOpen(false)}
-              >
-                <ListItemIcon>
-                  <BookOnline />
-                </ListItemIcon>
-                <ListItemText className="pr-4" primary="Ebooks" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={Link}
-                to="/books?bookType=Audiobook"
-                onClick={() => setIsOpen(false)}
-              >
-                <ListItemIcon>
-                  <Headphones />
-                </ListItemIcon>
-                <ListItemText className="pr-4" primary="Audiobooks" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={Link}
-                to="/"
-                onClick={() => setIsOpen(false)}
-              >
-                <ListItemIcon>
-                  <Subscriptions />
-                </ListItemIcon>
-                <ListItemText className="pr-4" primary="Subscriptions" />
-              </ListItemButton>
-            </ListItem>
+            <CustomListItem
+              to="/books?bookType=Paper book"
+              icon={<Book />}
+              text="Paper books"
+              onClick={() => setDrawerIsOpen(false)}
+            />
+            <CustomListItem
+              to="/books?bookType=Ebook"
+              icon={<BookOnline />}
+              text="Ebooks"
+              onClick={() => setDrawerIsOpen(false)}
+            />
+            <CustomListItem
+              to="/books?bookType=Audiobook"
+              icon={<Headphones />}
+              text="Audiobooks"
+              onClick={() => setDrawerIsOpen(false)}
+            />
+            <CustomListItem
+              to="/subscriptions"
+              icon={<Subscriptions />}
+              text="Subscriptions"
+              onClick={() => setDrawerIsOpen(false)}
+            />
             <Divider sx={{ borderBottomWidth: 3 }} />
             {user ? (
-              <>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/profile"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <PersonIcon />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Profile" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <ShoppingCartIcon />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Cart" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/profile/wishlist"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <FavoriteIcon />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Wishlist" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <MenuBook />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Library" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <WorkspacePremium />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="My subscriptions" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <ReceiptLong />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Order history" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      setIsOpen(false);
-                      signout();
-                    }}
-                  >
-                    <ListItemIcon>
-                      <ExitToApp />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Sign out" />
-                  </ListItemButton>
-                </ListItem>
-              </>
+              <UserListItems
+                isAdmin={isAdmin}
+                setIsOpen={setDrawerIsOpen}
+                signout={signout}
+              />
             ) : (
-              <>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/signin"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <Login />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Sign in" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={Link}
-                    to="/signup"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <ListItemIcon>
-                      <Create />
-                    </ListItemIcon>
-                    <ListItemText className="pr-4" primary="Sign up" />
-                  </ListItemButton>
-                </ListItem>
-              </>
+              <GuestListItems setIsOpen={setDrawerIsOpen} />
             )}
           </List>
         </Drawer>
+
         <div className="flex w-full flex-row items-center justify-between gap-4 text-white">
           <Link to="/" className="text-2xl font-semibold sm:text-3xl">
             Bookstore
           </Link>
-          <div className="relative w-2/5 text-black sm:block">
+          <div className="relative w-2/5 text-black">
             <input
               type="text"
               id="navbarSearch"
@@ -260,11 +134,14 @@ function NavBar() {
             </span>
           </div>
 
-          <div onClick={() => setIsOpen(true)} className="block sm:hidden">
+          <div
+            onClick={() => setDrawerIsOpen(true)}
+            className="block sm:hidden"
+          >
             <MenuIcon fontSize="large" />
           </div>
           <div className="hidden items-center justify-between gap-2 sm:flex">
-            <Link to="/">
+            <Link to="/profile/cart">
               <ShoppingCartIcon fontSize="large" />
             </Link>
             <Link to="/profile/wishlist">
@@ -276,34 +153,36 @@ function NavBar() {
             <Menu
               id="basic-menu"
               anchorEl={anchorEl}
-              open={open}
+              open={menuIsOpen}
+              onClick={handleClose}
               onClose={handleClose}
             >
               {user
-                ? [
-                    <MenuItem component={Link} to="/profile" key="profile">
-                      Profile
-                    </MenuItem>,
-                    <MenuItem component={Link} to="/" key="library">
-                      Library
-                    </MenuItem>,
-                    <MenuItem component={Link} to="/" key="subscription">
-                      My subscriptions
-                    </MenuItem>,
-                    <MenuItem component={Link} to="/" key="orders">
-                      Order history
-                    </MenuItem>,
-                    <Divider key="divider" />,
-                    <MenuItem
-                      key="signout"
-                      onClick={() => {
-                        handleClose();
-                        signout();
-                      }}
-                    >
-                      Sign out
-                    </MenuItem>,
-                  ]
+                ? isAdmin
+                  ? [
+                      adminMenuItemList,
+                      <MenuItem
+                        key="signout"
+                        onClick={() => {
+                          handleClose();
+                          signout();
+                        }}
+                      >
+                        Sign out
+                      </MenuItem>,
+                    ]
+                  : [
+                      ...userMenuItemList,
+                      <MenuItem
+                        key="signout"
+                        onClick={() => {
+                          handleClose();
+                          signout();
+                        }}
+                      >
+                        Sign out
+                      </MenuItem>,
+                    ]
                 : [
                     <MenuItem
                       key="signin"
@@ -325,28 +204,127 @@ function NavBar() {
             </Menu>
           </div>
         </div>
+
         <div className="hidden w-full items-center justify-evenly text-xl text-white sm:flex">
           <Link to="/books?bookType=Paper book">Paper books</Link>
           <Link to="/books?bookType=Ebook">Ebooks</Link>
           <Link to="/books?bookType=Audiobook">Audiobooks</Link>
-          <p>Subscription</p>
+          <Link to="/subscriptions">Subscription</Link>
         </div>
       </div>
     </nav>
   );
 }
 
-export default NavBar;
-
-{
-  /* <div>
-<button onClick={() => setIsOpen((old) => !old)}>ok</button>
-<Drawer anchor="right" open={isOpen} onClose={() => setIsOpen(false)}>
-  <div className="w-20">
-    <p>ok</p>
-    <p>ok</p>
-    <p>ok</p>
-  </div>
-</Drawer>
-</div> */
+function CustomListItem({ to, icon, text, onClick }) {
+  return (
+    <ListItem disablePadding>
+      <ListItemButton component={Link} to={to} onClick={onClick}>
+        <ListItemIcon>{icon}</ListItemIcon>
+        <ListItemText className="pr-4" primary={text} />
+      </ListItemButton>
+    </ListItem>
+  );
 }
+
+const userMenuItemList = [
+  <MenuItem component={Link} to="/profile" key="profile">
+    Profile
+  </MenuItem>,
+  <MenuItem component={Link} to="/profile/library" key="library">
+    Library
+  </MenuItem>,
+  <MenuItem component={Link} to={`/profile/orders`} key="orders">
+    Order history
+  </MenuItem>,
+  <Divider key="divider" />,
+];
+const adminMenuItemList = [
+  <MenuItem component={Link} to="/profile" key="profile">
+    Profile
+  </MenuItem>,
+  <MenuItem component={Link} to="/profile/library" key="library">
+    Library
+  </MenuItem>,
+  <MenuItem component={Link} to="/admin/reviews" key="reviews">
+    Review history
+  </MenuItem>,
+  <MenuItem component={Link} to="/admin/orders" key="orders">
+    Order history
+  </MenuItem>,
+  <Divider key="divider" />,
+];
+
+function UserListItems({ isAdmin, setIsOpen, signout }) {
+  return (
+    <>
+      <CustomListItem
+        to="/profile"
+        icon={<PersonIcon />}
+        text="Profile"
+        onClick={() => setIsOpen(false)}
+      />
+      <CustomListItem
+        to="/profile/cart"
+        icon={<ShoppingCartIcon />}
+        text="Cart"
+        onClick={() => setIsOpen(false)}
+      />
+      <CustomListItem
+        to="/profile/wishlist"
+        icon={<FavoriteIcon />}
+        text="Wishlist"
+        onClick={() => setIsOpen(false)}
+      />
+      <CustomListItem
+        to="/profile/library"
+        icon={<MenuBook />}
+        text="Library"
+        onClick={() => setIsOpen(false)}
+      />
+      {isAdmin && (
+        <CustomListItem
+          to="/admin/reviews"
+          icon={<WorkspacePremium />}
+          text="Review history"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <CustomListItem
+        to={isAdmin ? "/admin/orders" : "/profile/orders"}
+        icon={<ReceiptLong />}
+        text="Order history"
+        onClick={() => setIsOpen(false)}
+      />
+      <CustomListItem
+        onClick={() => {
+          setIsOpen(false);
+          signout();
+        }}
+        icon={<ExitToApp />}
+        text="Sign out"
+      />
+    </>
+  );
+}
+
+function GuestListItems({ setIsOpen }) {
+  return (
+    <>
+      <CustomListItem
+        to="/signin"
+        icon={<Login />}
+        text="Sign in"
+        onClick={() => setIsOpen(false)}
+      />
+      <CustomListItem
+        to="/signup"
+        icon={<Create />}
+        text="Sign up"
+        onClick={() => setIsOpen(false)}
+      />
+    </>
+  );
+}
+
+export default NavBar;
