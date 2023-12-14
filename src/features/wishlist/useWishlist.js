@@ -9,7 +9,7 @@ export function useWishlist() {
   } = useQuery({
     queryKey: ["wishlist"],
     queryFn: async function () {
-      const response = await axios.get("/user/wishlist");
+      const response = await axios.get("/wishlist");
       return response.data;
     },
   });
