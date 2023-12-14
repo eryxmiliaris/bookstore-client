@@ -37,7 +37,7 @@ function Sorting() {
   const [selectedOption, setSelectedOption] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleOptionChange = function (selectedOption) {
+  const handleOptionChange = (selectedOption) => {
     const [sortBy, sortOrder] = selectedOption.value.split(",");
     const stringParams = searchParams.toString();
     const params = queryString.parse(stringParams);
@@ -49,7 +49,7 @@ function Sorting() {
     setSearchParams(updatedParams);
   };
 
-  const handleSearchClick = function () {
+  const handleSearchClick = () => {
     if (!searchQuery.trim()) return;
     const stringParams = searchParams.toString();
     const params = queryString.parse(stringParams);
@@ -60,7 +60,7 @@ function Sorting() {
     setSearchParams(queryString.stringify(updatedParams));
   };
 
-  const handleSearchClear = function () {
+  const handleSearchClear = () => {
     const stringParams = searchParams.toString();
     const params = queryString.parse(stringParams);
     delete params.bookTitle;
@@ -68,26 +68,23 @@ function Sorting() {
     setSearchParams(queryString.stringify(params));
   };
 
-  useEffect(
-    function () {
-      const sortBy = queryString.parse(searchParams.toString()).sortBy;
-      if (sortBy !== undefined) {
-        const sortOrder = queryString.parse(searchParams.toString()).sortOrder;
-        const value = `${sortBy},${sortOrder}`;
-        sortOptions.map((option) => {
-          if (option.value === value) {
-            setSelectedOption(option);
-          }
-          return option;
-        });
-      }
-      const bookTitle = queryString.parse(searchParams.toString()).bookTitle;
-      if (bookTitle !== undefined) {
-        setSearchQuery(bookTitle);
-      }
-    },
-    [setSearchQuery, setSelectedOption, searchParams],
-  );
+  useEffect(() => {
+    const sortBy = queryString.parse(searchParams.toString()).sortBy;
+    if (sortBy !== undefined) {
+      const sortOrder = queryString.parse(searchParams.toString()).sortOrder;
+      const value = `${sortBy},${sortOrder}`;
+      sortOptions.map((option) => {
+        if (option.value === value) {
+          setSelectedOption(option);
+        }
+        return option;
+      });
+    }
+    const bookTitle = queryString.parse(searchParams.toString()).bookTitle;
+    if (bookTitle !== undefined) {
+      setSearchQuery(bookTitle);
+    }
+  }, [setSearchQuery, setSelectedOption, searchParams]);
 
   return (
     <div className="flex flex-col">
@@ -119,6 +116,7 @@ function Sorting() {
           </span>
         </div>
       </div>
+
       <div className="mb-4 flex items-center justify-end space-x-2">
         <p className="text-lg font-semibold">Sort by:</p>
         <Select

@@ -7,6 +7,7 @@ import axios from "../../util/axios";
 
 import BookListItem from "./BookListItem";
 import Spinner from "../../components/Spinner";
+import ErrorPage from "../../components/ErrorPage";
 
 function BookList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,12 +66,12 @@ function BookList() {
   }
 
   if (error) {
-    return <div>Error occured: {error.message}</div>;
+    return <ErrorPage error={error} />;
   }
 
   const { content: books, totalPages } = booksData;
 
-  const handlePageChange = function (event, value) {
+  const handlePageChange = (event, value) => {
     const query = queryString.parse(searchParams.toString());
     const queryStringified = queryString.stringify({
       ...query,
@@ -87,7 +88,15 @@ function BookList() {
             No books available
           </p>
         ) : (
-          books.map((book) => <BookListItem key={book.id} book={book} />)
+          books.map((book) => {
+            return (
+              <BookListItem
+                key={book.id}
+                book={book}
+                types={types[0] === undefined ? book.bookTypes : types}
+              />
+            );
+          })
         )}
       </ul>
 

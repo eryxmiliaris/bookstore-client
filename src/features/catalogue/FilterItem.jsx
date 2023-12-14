@@ -1,37 +1,36 @@
-import queryString from "query-string";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import queryString from "query-string";
 
 function FilterItem({ data, title, paramName }) {
   const [dataCheckedState, setDataCheckedState] = useState(
     Array(data.length).fill(false),
   );
+
   const [searchParams, setSearchParams] = useSearchParams();
 
-  useEffect(
-    function () {
-      const stringParams = searchParams.toString();
-      const params = queryString.parse(stringParams);
+  useEffect(() => {
+    const stringParams = searchParams.toString();
+    const params = queryString.parse(stringParams);
 
-      let paramData = params[paramName];
-      if (!Array.isArray(paramData)) {
-        if (!paramData === undefined) {
-          paramData = new Array();
-        } else {
-          paramData = new Array(paramData);
-        }
+    let paramData = params[paramName];
+    if (!Array.isArray(paramData)) {
+      if (!paramData === undefined) {
+        paramData = new Array();
+      } else {
+        paramData = new Array(paramData);
       }
-      setDataCheckedState(
-        data.map((data) => {
-          if (paramData.includes(data)) return true;
-          return false;
-        }),
-      );
-    },
-    [data, paramName, searchParams],
-  );
+    }
 
-  const handleOnChange = function (type, position) {
+    setDataCheckedState(
+      data.map((data) => {
+        if (paramData.includes(data)) return true;
+        return false;
+      }),
+    );
+  }, [data, paramName, searchParams]);
+
+  const handleChange = (type, position) => {
     const stringParams = searchParams.toString();
     const params = queryString.parse(stringParams);
     let paramData = queryString.parse(stringParams)[paramName];
@@ -69,7 +68,7 @@ function FilterItem({ data, title, paramName }) {
                 name={el}
                 value={el}
                 checked={dataCheckedState[index]}
-                onChange={() => handleOnChange(el, index)}
+                onChange={() => handleChange(el, index)}
                 className="form-checkbox min-h-5 min-w-5 text-blue-500"
               />
               <span>{el}</span>
