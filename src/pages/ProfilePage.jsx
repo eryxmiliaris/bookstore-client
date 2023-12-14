@@ -1,11 +1,13 @@
-import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
+
+import { useAuth } from "../features/auth/AuthContext";
+
 import Button from "../components/Button";
 import Form from "../components/Form";
-import Addresses from "../features/profile/Addresses";
 import ModalWindow from "../components/ModalWindow";
+import Addresses from "../features/profile/Addresses";
 
-function Profile() {
+function ProfilePage() {
   const { user, updateUserData, isLoading, success } = useAuth();
 
   const [editUserOpen, setEditUserOpen] = useState(false);
@@ -15,7 +17,6 @@ function Profile() {
     setEditUserOpen(false);
   };
   const handleEditUser = async (data) => {
-    console.log(data);
     const { username, email, birthDate } = data;
     await updateUserData(username, email, birthDate);
     if (success) handleEditUserClose();
@@ -34,14 +35,26 @@ function Profile() {
           <p className="text-gray-600">{user?.email}</p>
           <p className="font-medium text-gray-800">Birth date:</p>
           <p className="text-gray-600">{user?.birthDate}</p>
+          {user.hasActiveSubscription && (
+            <p className="font-medium text-gray-800">
+              Subscription ends on:{" "}
+              <span className="font-normal italic">
+                {user.activeSubscriptionEndDate}
+              </span>
+            </p>
+          )}
         </div>
         <Button onClick={handleEditUserOpen}>Update</Button>
       </div>
+
+      <Addresses />
+
       <ModalWindow
         open={editUserOpen}
         onClose={(event, reason) => handleEditUserClose(event, reason)}
+        className="w-[320px]"
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex w-full flex-col gap-2">
           <Form
             onSubmit={handleEditUser}
             submitButtonText="Update profile"
@@ -91,10 +104,8 @@ function Profile() {
           </Button>
         </div>
       </ModalWindow>
-
-      <Addresses />
     </div>
   );
 }
 
-export default Profile;
+export default ProfilePage;
