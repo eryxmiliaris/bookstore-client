@@ -1,4 +1,12 @@
-function Button({ children, onClick, type, className, disabled = false }) {
+/* eslint-disable react/prop-types */
+function Button({
+  children,
+  onClick,
+  type,
+  className,
+  disabled = false,
+  disabledText = children,
+}) {
   let style = "";
   switch (type) {
     case "primary":
@@ -8,6 +16,10 @@ function Button({ children, onClick, type, className, disabled = false }) {
     case "red":
       style =
         "w-full rounded bg-red-700 px-4 py-2 text-white hover:bg-red-800 focus:outline-none";
+      break;
+    case "green":
+      style =
+        "w-full rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 focus:outline-none";
       break;
     default:
       style =
@@ -20,7 +32,7 @@ function Button({ children, onClick, type, className, disabled = false }) {
       className={style + " " + className}
       onClick={onClick}
     >
-      {children}
+      {disabled ? disabledText : children}
     </button>
   );
 }
