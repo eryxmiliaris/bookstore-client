@@ -7,14 +7,14 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import axios from "axios";
 
-import customAxios from "../util/axios";
+import customAxios from "../../util/axios";
 
 const AuthContext = createContext();
 
 function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [userIsLoading, setUserIsLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -22,28 +22,28 @@ function AuthProvider({ children }) {
   const [errorList, setErrorList] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(function () {
+  useEffect(() => {
     fetchUserData();
   }, []);
 
-  const fetchUserData = async function () {
+  const fetchUserData = async () => {
     setUserIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:8080/api/user/info", {
-        withCredentials: true,
-      });
+      const response = await customAxios.get("/user/info");
       setMessage("");
       setUser(response.data);
+      if (response.data.roles.includes("ROLE_ADMIN")) {
+        setIsAdmin(true);
+      }
     } catch (error) {
       setUser(null);
-      // setMessage(error.response.data.message);
     } finally {
       setIsLoading(false);
       setUserIsLoading(false);
     }
   };
 
-  const updateUserData = async function (username, email, birthDate) {
+  const updateUserData = async (username, email, birthDate) => {
     setIsLoading(true);
     setSuccess(false);
     try {
@@ -63,17 +63,17 @@ function AuthProvider({ children }) {
     }
   };
 
-  const signin = async function (login, password) {
+  const signin = async (login, password) => {
     setIsLoading(true);
     try {
       const response = await customAxios.post("/auth/signin", {
-        login: login,
+        login,
         password,
       });
       setUser(response.data);
       setMessage("");
-      navigate("/profile");
       toast.success("You were singed in!");
+      window.location.replace("/profile");
     } catch (error) {
       setUser(null);
       setMessage(error.response.data.message);
@@ -82,17 +82,18 @@ function AuthProvider({ children }) {
     }
   };
 
-  const signup = async function (username, email, password, birthDate) {
+  const signup = async (username, email, password, birthDate) => {
     setIsLoading(true);
     setSuccess(false);
     try {
-      const response = await customAxios.post("/auth/signup", {
+      await customAxios.post("/auth/signup", {
         username,
         email,
         password,
         birthDate,
       });
-      setMessage(response.data.message);
+      // setMessage(response.data.message);
+      toast.success("User registered successfully!");
       setSuccess(true);
       setErrorList(null);
     } catch (error) {
@@ -110,14 +111,14 @@ function AuthProvider({ children }) {
     }
   };
 
-  const signout = async function () {
+  const signout = async () => {
     await customAxios.post("/auth/signout");
     setUser(null);
     toast.success("Signed out successfully!");
-    navigate("/");
+    window.location.replace("/");
   };
 
-  const forgotPassword = async function (email) {
+  const forgotPassword = async (email) => {
     setIsLoading(true);
     try {
       await customAxios.post(`/auth/forgot?email=${email}`);
@@ -130,14 +131,13 @@ function AuthProvider({ children }) {
     }
   };
 
-  const resetPassword = async function (token, password) {
+  const resetPassword = async (token, password) => {
     setIsLoading(true);
     try {
       await customAxios.post(`/auth/reset`, {
         token: token,
         password: password,
       });
-      // setMessage(response.data.message);
       setMessage("");
       toast.success("Password has been successfully reset!");
       navigate("/signin");
@@ -149,7 +149,7 @@ function AuthProvider({ children }) {
     }
   };
 
-  const clearMessages = useCallback(function () {
+  const clearMessages = useCallback(() => {
     setMessage("");
     setErrorList(null);
   }, []);
@@ -158,6 +158,7 @@ function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        isAdmin,
         userIsLoading,
         isLoading,
         message,
