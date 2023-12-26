@@ -88,12 +88,6 @@ function CartPage() {
     return <Spinner />;
   }
 
-  if (cartError || addressesError || shippingMethodsError) {
-    return (
-      <ErrorPage error={cartError || addressesError || shippingMethodsError} />
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-4">
       <div className="flex items-center justify-between">
